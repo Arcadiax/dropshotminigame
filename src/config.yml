@@ -1,0 +1,36 @@
+arenas:
+  arenaCount: 1
+  inviteLength: 30
+  arena0:
+    waitSpawn:
+      x: 0.5
+      y: 203
+      z: -15.5
+      world: world
+
+    p1Spawn:
+      x: 0.5
+      y: 198
+      z: -12.4
+      world: world
+      fx: -15.7
+      fy: 22.5
+
+    p2Spawn:
+      x: 0.5
+      y: 198
+      z: -18.5
+      world: world
+      fx: 179.3
+      fy: 5.1
+
+settings:
+  startGameCountdown: 15
+  gameLength: 60
+
+hub:
+  spawn:
+    x: 0.5
+    y: 4
+    z: 0.5
+    world: world
