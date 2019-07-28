@@ -7,16 +7,15 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.util.BlockIterator;
-import org.bukkit.util.Vector;
-
-import java.lang.reflect.Field;
 
 public class BaseGameSuppression implements Listener {
     private Main _plugin;
@@ -98,5 +97,26 @@ public class BaseGameSuppression implements Listener {
 
         Player p = ((Player) arrow.getShooter()).getPlayer();
         ArenaManager.GetInstance().HandleArrowHitBlockEvent(p, hitBlock);
+    }
+
+    @EventHandler
+    public void OnWeatherChange(WeatherChangeEvent event) {
+            event.setCancelled(true);
+            event.getWorld().setStorm(false);
+    }
+
+    @EventHandler
+    public void PlayerJoinEvent(PlayerJoinEvent event){
+        Player p = event.getPlayer();
+
+        if(p == null)
+            return;
+
+        p.teleport(ArenaManager.GetInstance().HubLocation());
+    }
+
+    @EventHandler
+    public void BlockDamageEvent(BlockDamageEvent event){
+        event.setCancelled(true);
     }
 }

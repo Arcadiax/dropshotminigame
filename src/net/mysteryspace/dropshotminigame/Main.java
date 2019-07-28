@@ -37,9 +37,10 @@ public class Main extends JavaPlugin {
         //Listeners
         new BaseGameSuppression(this);
 
-        //Other
+        //World Setup
         World world = Bukkit.getWorlds().get(0);
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
         world.setTime(0);
 
     }

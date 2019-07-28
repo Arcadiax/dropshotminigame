@@ -30,7 +30,9 @@ settings:
 
 hub:
   spawn:
-    x: 0.5
-    y: 4
-    z: 0.5
+    x: -0.5
+    y: 5
+    z: 1.5
     world: world
+    fx: -89.3
+    fy: 5.3

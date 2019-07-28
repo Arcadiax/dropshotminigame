@@ -84,7 +84,7 @@ public class ArenaManager {
         _startGameCountdownLength = settings.getInt("startGameCountdown");
 
         ConfigurationSection hub = config.getConfigurationSection("hub");
-        _hubLocation = Helpers.LocationFromConfig(hub.getConfigurationSection("spawn"));
+        _hubLocation = Helpers.LocationAndFacingFromConfig(hub.getConfigurationSection("spawn"));
     }
 
     private Arena ArenaFromConfiguration(ConfigurationSection config){
