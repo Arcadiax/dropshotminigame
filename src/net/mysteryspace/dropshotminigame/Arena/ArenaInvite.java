@@ -42,6 +42,7 @@ public class ArenaInvite {
     }
 
     public void InitialNotice(){
+        //TODO: Bold and green text with different colored link
         IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"You have been invited to play by " + _fromPlayer.getDisplayName() + " \",\"extra\":[{\"text\":\"§bJoin Match\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":\"Click to join\"},\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/acceptInvite " + _id + "\"}}]}");
         PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.CHAT);
         ((CraftPlayer)_toPlayer).getHandle().playerConnection.sendPacket(packet);

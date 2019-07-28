@@ -208,6 +208,9 @@ public class Arena {
     }
 
     public void HandleFallDamage(Player p){
+        if(_state != ArenaGameState.PLAYING)
+            return;
+
         if(_players.get(0) == p)
             p.teleport(_p1Spawn);
         else if(_players.get(1) == p)
@@ -262,5 +265,9 @@ public class Arena {
         for(Player p : _players){
             p.getInventory().clear();
         }
+    }
+
+    public boolean IsPlaying(){
+        return _state == ArenaGameState.PLAYING;
     }
 }

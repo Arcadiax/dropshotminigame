@@ -1,5 +1,6 @@
 package net.mysteryspace.dropshotminigame.Util;
 
+import net.mysteryspace.dropshotminigame.Arena.Arena;
 import net.mysteryspace.dropshotminigame.Arena.ArenaManager;
 import net.mysteryspace.dropshotminigame.Main;
 import org.bukkit.Bukkit;
@@ -13,9 +14,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.util.BlockIterator;
+import org.bukkit.util.Vector;
 
 public class BaseGameSuppression implements Listener {
     private Main _plugin;
@@ -118,5 +121,28 @@ public class BaseGameSuppression implements Listener {
     @EventHandler
     public void BlockDamageEvent(BlockDamageEvent event){
         event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void PlayerMoveEvent(PlayerMoveEvent event){
+        //TODO: Move to handle in arena
+        Player p = event.getPlayer();
+
+        if(p == null)
+            return;
+
+        Arena pArena = ArenaManager.GetInstance().GetPlayerArena(p);
+        if(pArena == null)
+            return;
+
+        if(!pArena.IsPlaying())
+            return;
+
+        Vector pVel = p.getVelocity();
+        if(pVel.getY() >= 0)
+            return;
+
+        //TODO: Tinker with fall speed
+        p.setVelocity(new Vector(pVel.getX(), pVel.getY() * 0.5f, pVel.getZ()));
     }
 }
