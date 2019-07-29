@@ -8,15 +8,18 @@ import net.mysteryspace.dropshotminigame.Util.Timers;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
 
     private Main _instance;
+    private Settings _settings;
 
     public Main GetInstance(){
         return _instance;
     }
+    public Settings GetSettings(){return _settings; }
 
     @Override
     public void onEnable(){
@@ -24,6 +27,17 @@ public class Main extends JavaPlugin {
         _instance = this;
 
         saveDefaultConfig();
+
+        //Settings
+        ConfigurationSection config = getConfig().getConfigurationSection("features");
+        _settings = new Settings(
+                config.getBoolean("suppressWeather", false),
+                config.getBoolean("suppressTime", false),
+                config.getBoolean("suppressBlockDamage", false),
+                config.getBoolean("suppressHunger", false),
+                config.getBoolean("suppressDamage", false),
+                config.getBoolean("integratedHub", false)
+        );
 
         //Setup
         new ArenaManager(this);
@@ -39,9 +53,13 @@ public class Main extends JavaPlugin {
 
         //World Setup
         World world = Bukkit.getWorlds().get(0);
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-        world.setTime(0);
+        if(_settings.SuppressTime)
+            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+
+        if(_settings.SuppressWeather) {
+            world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+            world.setTime(0);
+        }
 
     }
 

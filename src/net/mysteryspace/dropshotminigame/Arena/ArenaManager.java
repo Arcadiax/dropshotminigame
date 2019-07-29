@@ -194,7 +194,6 @@ public class ArenaManager {
         for(Arena arena : _arenas){
             if(arena.HasPlayer(p)) {
                 arena.HandleFallDamage(p);
-                _plugin.TellConsole("Got hit event");
             }
         }
     }

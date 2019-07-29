@@ -1,3 +1,10 @@
+features:
+  suppressWeather: true
+  suppressTime: true
+  suppressHunger: true
+  suppressDamage: true
+  integratedHub: true
+
 arenas:
   arenaCount: 1
   inviteLength: 30

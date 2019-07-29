@@ -31,6 +31,9 @@ public class BaseGameSuppression implements Listener {
 
     @EventHandler
     public void FoodLevelChangeEvent(FoodLevelChangeEvent event){
+        if(!_plugin.GetSettings().SuppressHunger)
+            return;
+
         event.setCancelled(true);
 
         Player p = (Player)event.getEntity();
@@ -50,20 +53,26 @@ public class BaseGameSuppression implements Listener {
         if(p == null)
             return;
 
-        if(event.getCause() == EntityDamageEvent.DamageCause.FALL)
+        if(event.getCause() == EntityDamageEvent.DamageCause.FALL) {
             ArenaManager.GetInstance().HandleFallDamage(p);
+            event.setCancelled(true);
+            return;
+        }
 
-        event.setCancelled(true);
+        if(_plugin.GetSettings().SuppressDamage)
+            event.setCancelled(true);
     }
 
     @EventHandler
     public void EntityDamageByBlockEvent(EntityDamageByBlockEvent event){
-        event.setCancelled(true);
+        if(_plugin.GetSettings().SuppressDamage)
+            event.setCancelled(true);
     }
 
     @EventHandler
     public void EntityDamageByEntityEvent(EntityDamageByEntityEvent event){
-        event.setCancelled(true);
+        if(_plugin.GetSettings().SuppressDamage)
+            event.setCancelled(true);
     }
 
     @EventHandler
@@ -104,12 +113,19 @@ public class BaseGameSuppression implements Listener {
 
     @EventHandler
     public void OnWeatherChange(WeatherChangeEvent event) {
-            event.setCancelled(true);
-            event.getWorld().setStorm(false);
+        if(!_plugin.GetSettings().SuppressWeather)
+            return;
+
+        event.setCancelled(true);
+        event.getWorld().setStorm(false);
     }
 
     @EventHandler
     public void PlayerJoinEvent(PlayerJoinEvent event){
+
+        if(!_plugin.GetSettings().IntegratedHub)
+            return;
+
         Player p = event.getPlayer();
 
         if(p == null)
@@ -120,7 +136,18 @@ public class BaseGameSuppression implements Listener {
 
     @EventHandler
     public void BlockDamageEvent(BlockDamageEvent event){
-        event.setCancelled(true);
+
+        if(_plugin.GetSettings().SuppressBlockDamage) {
+            event.setCancelled(true);
+            return;
+        }
+
+        Player p = event.getPlayer();
+        if(p == null)
+            return;
+
+        if(ArenaManager.GetInstance().GetPlayerArena(p) != null)
+            event.setCancelled(true);
     }
 
     @EventHandler
