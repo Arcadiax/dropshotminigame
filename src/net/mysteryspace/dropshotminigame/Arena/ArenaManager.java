@@ -7,7 +7,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
@@ -49,10 +48,6 @@ public class ArenaManager {
 
     private void SetupFromConfig(ConfigurationSection config){
         _onlinePlayers = new ArrayList<Player>();
-
-        int arenaCount = config.getInt("arenaCount");
-
-        _inviteLength = config.getInt("inviteLength");
         _invites = new ArrayList<ArenaInvite>();
 
         BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
@@ -71,6 +66,7 @@ public class ArenaManager {
             }
         }, 0L, 60L);
 
+        int arenaCount = config.getInt("arenaCount");
         _arenas = new Arena[arenaCount];
         for(int i = 0; i < arenaCount; i++){
             ConfigurationSection arenaConfig = config.getConfigurationSection("arena" + i);
@@ -82,6 +78,7 @@ public class ArenaManager {
         ConfigurationSection settings = config.getConfigurationSection("settings");
         _gameLength = settings.getInt("gameLength");
         _startGameCountdownLength = settings.getInt("startGameCountdown");
+        _inviteLength = settings.getInt("inviteLength");
 
         ConfigurationSection hub = config.getConfigurationSection("hub");
         _hubLocation = Helpers.LocationAndFacingFromConfig(hub.getConfigurationSection("spawn"));
@@ -215,26 +212,7 @@ public class ArenaManager {
     }
 
     private int GetScoreFromMaterial(Material material){
-        //TODO: Put these in config
-        switch(material){
-            case WHITE_WOOL:
-                return 1;
-
-            case BLACK_WOOL:
-                return 2;
-
-            case CYAN_WOOL:
-                return 3;
-
-            case RED_WOOL:
-                return 4;
-
-            case YELLOW_WOOL:
-                return 5;
-
-            default:
-                return 0;
-        }
+        return _plugin.GetSettings().GetScoreValue(material);
     }
 
     public int GetMaxScore(){

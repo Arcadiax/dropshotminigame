@@ -4,10 +4,24 @@ features:
   suppressHunger: true
   suppressDamage: true
   integratedHub: true
+  saveInventoryBetweenGames: true
+
+settings:
+  startGameCountdown: 15
+  gameLength: 60
+  inviteLength: 30
+
+hub:
+  spawn:
+    x: -0.5
+    y: 5
+    z: 1.5
+    world: world
+    fx: -89.3
+    fy: 5.3
 
 arenas:
   arenaCount: 1
-  inviteLength: 30
   arena0:
     waitSpawn:
       x: 0.5
@@ -31,15 +45,9 @@ arenas:
       fx: 179.3
       fy: 5.1
 
-settings:
-  startGameCountdown: 15
-  gameLength: 60
-
-hub:
-  spawn:
-    x: -0.5
-    y: 5
-    z: 1.5
-    world: world
-    fx: -89.3
-    fy: 5.3
+scoreValues:
+  WHITE_WOOL: 1
+  BLACK_WOOL: 2
+  CYAN_WOOL: 3
+  RED_WOOL: 4
+  YELLOW_WOOL: 5

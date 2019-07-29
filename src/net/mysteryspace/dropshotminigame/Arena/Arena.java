@@ -14,8 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 
 public class Arena {
 
@@ -24,6 +23,8 @@ public class Arena {
     private Location _p2Spawn;
 
     private ArrayList<Player> _players;
+    private HashMap<Player, ItemStack[]> _playerTempInventory;
+    private HashMap<Player, Location> _playerTempLocations;
     private Timer _timer;
     private int _logicTaskId;
 
@@ -41,6 +42,8 @@ public class Arena {
         _p2Spawn = p2Spawn;
 
         _players = new ArrayList<>();
+        _playerTempInventory = new HashMap<>();
+        _playerTempLocations = new HashMap<>();
         _playerScores = new int[2];
 
         _state = ArenaGameState.WAITING;
@@ -57,19 +60,6 @@ public class Arena {
 
     public boolean IsEmpty(){
         return _players.isEmpty();
-    }
-
-    public void PlayerJoin(Player p){
-        if(_players.size() == 2){
-            p.sendMessage("Could not join game, it's full");
-            return;
-        }
-
-        _players.add(p);
-        p.teleport(_waitSpawn);
-
-        if(_players.size() == 2)
-            StartCountdown();
     }
 
     private void StartCountdown(){
@@ -113,14 +103,12 @@ public class Arena {
     }
 
     private void SendCountdownMessage(){
-        //TODO: Move beginning of message to config
         IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nGame Starting in §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
         PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
         ((CraftPlayer)_players.get(0)).getHandle().playerConnection.sendPacket(packet);
     }
 
     private void SendGameCounterMessage(){
-        //TODO: Move beginning of message to config
         IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nTime Left: §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
         PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
 
@@ -130,8 +118,7 @@ public class Arena {
     }
 
     private void SendKickoutCounterMessage(){
-        //TODO: Move beginning of message to config
-        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nMoving to Hub in: §e§l§n" + Helpers.SecondsToString(_timer.GetTime())+ "\"}");
+        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nLeaving Game in: §e§l§n" + Helpers.SecondsToString(_timer.GetTime())+ "\"}");
         PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
 
         for(Player p : _players){
@@ -140,15 +127,47 @@ public class Arena {
 
     }
 
+    public void PlayerJoin(Player p){
+        if(_players.size() == 2){
+            p.sendMessage("Could not join game, it's full");
+            return;
+        }
+
+        if(!_plugin.GetSettings().IntegratedHub){
+            _playerTempLocations.put(p, p.getLocation());
+        }
+
+        if(_plugin.GetSettings().SaveInventoryBetweenGames) {
+            _playerTempInventory.put(p, p.getInventory().getContents().clone());
+        }
+
+        p.getInventory().clear();
+
+        _players.add(p);
+        p.teleport(_waitSpawn);
+
+        if(_players.size() == 2)
+            StartCountdown();
+    }
+
     public void PlayerQuit(Player p){
+        if(_playerTempLocations.containsKey(p)){
+            p.teleport(_playerTempLocations.get(p));
+            _playerTempLocations.remove(p);
+        } else if(_plugin.GetSettings().IntegratedHub)
+            p.teleport(ArenaManager.GetInstance().HubLocation());
+
+        if(_playerTempInventory.containsKey(p)){
+            p.getInventory().setContents(_playerTempInventory.get(p));
+            _playerTempInventory.remove(p);
+        }
+
         if(_players.size() == 1) {
-            _players = new ArrayList<>();
             ResetArena();
         }
 
         if(_players.size() == 2) {
             if(_state == ArenaGameState.PLAYING) {
-                int ind = _players.indexOf(p);
                 p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
             }
             _players.remove(p);
@@ -169,6 +188,8 @@ public class Arena {
         _state = ArenaGameState.WAITING;
         _players = new ArrayList<>();
         _playerScores = new int[2];
+        _playerTempLocations = new HashMap<>();
+        _playerTempInventory = new HashMap<>();
     }
 
     private void StartGame(){
@@ -197,13 +218,13 @@ public class Arena {
         BroadcastToPlayers("§a§l" + _players.get(winnerId).getDisplayName() + " Wins with " + _playerScores[winnerId] + " points!");
         BroadcastToPlayers("§f§l" + _players.get(secondId).getDisplayName() + " got " + _playerScores[secondId] + " points");
 
-        TakePlayerKit();
+        TakePlayerKits();
         _state = ArenaGameState.FINISHED;
     }
 
     private void EjectPlayers(){
         for(Player p : _players){
-            p.teleport(ArenaManager.GetInstance().HubLocation());
+            PlayerQuit(p);
         }
     }
 
@@ -218,10 +239,8 @@ public class Arena {
     }
 
     public void HandleArrowHit(Player p, int points){
-
-        if(_state != ArenaGameState.PLAYING) {
+        if(_state != ArenaGameState.PLAYING)
             return;
-        }
 
         if(points <= 0)
             return;
@@ -234,11 +253,12 @@ public class Arena {
         else
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 0);
 
+        //TODO: Remove when scoreboards implemented
         BroadcastToPlayers("§c§l" + p.getDisplayName() + " Scored §e§l" + points + " points!");
     }
 
     private void PreparePlayerScoreboard(){
-
+        //TODO: Scoreboard and no chat messages for scores
     }
 
     private void BroadcastToPlayers(String message){
@@ -248,7 +268,6 @@ public class Arena {
     }
 
     private void GivePlayersKit(){
-
         ItemStack[] items = {
                 new ItemStack(Material.BOW, 1),
                 new ItemStack(Material.ARROW, 320)
@@ -261,7 +280,7 @@ public class Arena {
         }
     }
 
-    private void TakePlayerKit(){
+    private void TakePlayerKits(){
         for(Player p : _players){
             p.getInventory().clear();
         }

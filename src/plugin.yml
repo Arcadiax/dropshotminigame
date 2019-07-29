@@ -5,11 +5,5 @@ main: net.mysteryspace.dropshotminigame.Main
 api-version: 1.13
 
 commands:
-  createGame:
-    description: Create a new match
-
-  invite:
-    description: Invite a player to your match
-
-  acceptInvite:
-    description: Accept an invite
+  dropshot:
+    description: Actions related to DropShot games - creategame, invite, leave

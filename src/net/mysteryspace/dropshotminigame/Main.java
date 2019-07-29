@@ -1,52 +1,35 @@
 package net.mysteryspace.dropshotminigame;
 import net.mysteryspace.dropshotminigame.Arena.ArenaManager;
-import net.mysteryspace.dropshotminigame.Commands.AcceptInviteCommand;
-import net.mysteryspace.dropshotminigame.Commands.CreateGameCommand;
-import net.mysteryspace.dropshotminigame.Commands.InviteCommand;
+import net.mysteryspace.dropshotminigame.Commands.*;
 import net.mysteryspace.dropshotminigame.Util.BaseGameSuppression;
 import net.mysteryspace.dropshotminigame.Util.Timers;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
 
-    private Main _instance;
     private Settings _settings;
 
-    public Main GetInstance(){
-        return _instance;
-    }
     public Settings GetSettings(){return _settings; }
 
     @Override
     public void onEnable(){
 
-        _instance = this;
-
+        //Config
         saveDefaultConfig();
-
-        //Settings
-        ConfigurationSection config = getConfig().getConfigurationSection("features");
-        _settings = new Settings(
-                config.getBoolean("suppressWeather", false),
-                config.getBoolean("suppressTime", false),
-                config.getBoolean("suppressBlockDamage", false),
-                config.getBoolean("suppressHunger", false),
-                config.getBoolean("suppressDamage", false),
-                config.getBoolean("integratedHub", false)
-        );
+        LoadSettings();
 
         //Setup
         new ArenaManager(this);
         new Timers(this);
 
         //Commands
-        new CreateGameCommand(this);
-        new InviteCommand(this);
-        new AcceptInviteCommand(this);
+        new DropshotCommand(this);
+        getCommand("dropshot").setTabCompleter(new TabCompleter(this));
 
         //Listeners
         new BaseGameSuppression(this);
@@ -61,6 +44,29 @@ public class Main extends JavaPlugin {
             world.setTime(0);
         }
 
+    }
+
+    private void LoadSettings(){
+        //Settings
+        ConfigurationSection featuresConfig = getConfig().getConfigurationSection("features");
+        _settings = new Settings(
+                featuresConfig.getBoolean("suppressWeather", false),
+                featuresConfig.getBoolean("suppressTime", false),
+                featuresConfig.getBoolean("suppressBlockDamage", false),
+                featuresConfig.getBoolean("suppressHunger", false),
+                featuresConfig.getBoolean("suppressDamage", false),
+                featuresConfig.getBoolean("integratedHub", false),
+                featuresConfig.getBoolean("saveInventoryBetweenGames", false)
+        );
+
+        ConfigurationSection scoreConfig = getConfig().getConfigurationSection("scoreValues");
+        _settings.SetScoreValues(
+                scoreConfig.getInt("WHITE_WOOL", 1),
+                scoreConfig.getInt("BLACK_WOOL", 2),
+                scoreConfig.getInt("CYAN_WOOL", 3),
+                scoreConfig.getInt("RED_WOOL", 4),
+                scoreConfig.getInt("YELLOW_WOOL", 5)
+        );
     }
 
     @Override
