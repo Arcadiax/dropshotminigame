@@ -21,6 +21,7 @@ public class Arena {
     private Location _waitSpawn;
     private Location _p1Spawn;
     private Location _p2Spawn;
+    private double _holeExitHeight;
 
     private ArrayList<Player> _players;
     private HashMap<Player, ItemStack[]> _playerTempInventory;
@@ -34,12 +35,13 @@ public class Arena {
 
     private ArenaGameState _state;
 
-    public Arena(Main plugin, Location waitSpawn, Location p1Spawn, Location p2Spawn){
+    public Arena(Main plugin, Location waitSpawn, Location p1Spawn, Location p2Spawn, double holeExitHeight){
         _plugin = plugin;
 
         _waitSpawn = waitSpawn;
         _p1Spawn = p1Spawn;
         _p2Spawn = p2Spawn;
+        _holeExitHeight = holeExitHeight;
 
         _players = new ArrayList<>();
         _playerTempInventory = new HashMap<>();
@@ -288,5 +290,9 @@ public class Arena {
 
     public boolean IsPlaying(){
         return _state == ArenaGameState.PLAYING;
+    }
+
+    public double GetHoleExitHeight(){
+        return _holeExitHeight;
     }
 }

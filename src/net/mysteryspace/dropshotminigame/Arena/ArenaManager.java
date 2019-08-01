@@ -5,9 +5,11 @@ import net.mysteryspace.dropshotminigame.Util.Helpers;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.ArrayList;
@@ -97,7 +99,10 @@ public class ArenaManager {
         ConfigurationSection p2SpawnConfig = config.getConfigurationSection("p2Spawn");
         Location p2Spawn = Helpers.LocationAndFacingFromConfig(p2SpawnConfig);
 
-        return new Arena(_plugin, waitSpawn, p1Spawn, p2Spawn);
+        //Hole Exit Height
+        double holeExitHeight = config.getDouble("holeExitHeight");
+
+        return new Arena(_plugin, waitSpawn, p1Spawn, p2Spawn, holeExitHeight);
     }
 
     public Arena GetEmptyArena(){
@@ -217,5 +222,14 @@ public class ArenaManager {
 
     public int GetMaxScore(){
         return GetScoreFromMaterial(Material.YELLOW_WOOL);
+    }
+
+    public void HandleShootBowEvent(Player p, EntityShootBowEvent event){
+        Arena arena = GetPlayerArena(p);
+
+        if(p.getLocation().getY() > arena.GetHoleExitHeight()){
+            event.setCancelled(true);
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 0f);
+        }
     }
 }

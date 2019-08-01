@@ -151,25 +151,14 @@ public class BaseGameSuppression implements Listener {
     }
 
     @EventHandler
-    public void PlayerMoveEvent(PlayerMoveEvent event){
-        //TODO: Move to handle in arena
-        Player p = event.getPlayer();
-
+    public void EntityShootBowEvent(EntityShootBowEvent event){
+        Player p = (Player)event.getEntity();
         if(p == null)
             return;
 
-        Arena pArena = ArenaManager.GetInstance().GetPlayerArena(p);
-        if(pArena == null)
+        if(ArenaManager.GetInstance().GetPlayerArena(p) == null)
             return;
 
-        if(!pArena.IsPlaying())
-            return;
-
-        Vector pVel = p.getVelocity();
-        if(pVel.getY() >= 0)
-            return;
-
-        //TODO: Tinker with fall speed
-        p.setVelocity(new Vector(pVel.getX(), pVel.getY() * 0.5f, pVel.getZ()));
+        ArenaManager.GetInstance().HandleShootBowEvent(p, event);
     }
 }

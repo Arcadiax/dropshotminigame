@@ -61,13 +61,18 @@ public class DropshotCommand implements CommandExecutor {
     private void CreateGame(Player p, String[] bits) {
         Arena arena = ArenaManager.GetInstance().GetEmptyArena();
 
+        if(ArenaManager.GetInstance().GetPlayerArena(p) != null) {
+            p.sendMessage("You're already in a match, use /dropshot invite to invite a friend or /dropshot leave to leave");
+            return;
+        }
+
         if(arena == null){
             p.sendMessage("No open slots");
             return;
         }
 
         arena.PlayerJoin(p);
-        p.sendMessage("Creating new match! Invite a friend using /invite");
+        p.sendMessage("Creating new match! Invite a friend using /dropshot invite");
     }
 
     private void Invite(Player p, String[] bits){
@@ -90,7 +95,7 @@ public class DropshotCommand implements CommandExecutor {
 
         Arena arena = ArenaManager.GetInstance().GetPlayerArena(p);
         if(arena == null){
-            p.sendMessage("You're not in a game, use /creategame to start a new one");
+            p.sendMessage("You're not in a game, use /dropshot creategame to start a new one");
             return;
         }
 
