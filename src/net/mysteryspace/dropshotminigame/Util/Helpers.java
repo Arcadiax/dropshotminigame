@@ -1,9 +1,13 @@
 package net.mysteryspace.dropshotminigame.Util;
 
-import net.mysteryspace.dropshotminigame.Main;
+import net.minecraft.server.v1_13_R2.ChatMessageType;
+import net.minecraft.server.v1_13_R2.IChatBaseComponent;
+import net.minecraft.server.v1_13_R2.PacketPlayOutChat;
+import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 public class Helpers {
 
@@ -38,7 +42,15 @@ public class Helpers {
         return (number >=10)? Integer.toString(number):String.format("0%s",Integer.toString(number));
     }
 
-    public static int scheduleSyncRepeatingTask(final Main plugin, final Runnable runnable, long delay, long period) {
-        return Bukkit.getScheduler().runTaskTimer(plugin, runnable, delay, period).getTaskId();
+    public static void SendGameInfoMessage(Player p, String message){
+        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a(message);
+        PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
+        ((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
+    }
+
+    public static void SendSpecialChatMessage(Player p, String message){
+        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a(message);
+        PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.CHAT);
+        ((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
     }
 }

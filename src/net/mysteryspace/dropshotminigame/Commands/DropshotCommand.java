@@ -58,7 +58,7 @@ public class DropshotCommand implements CommandExecutor {
         return true;
     }
 
-    private void CreateGame(Player p, String[] bits) {
+    public void CreateGame(Player p, String[] bits) {
         Arena arena = ArenaManager.GetInstance().GetEmptyArena();
 
         if(ArenaManager.GetInstance().GetPlayerArena(p) != null) {
@@ -75,13 +75,13 @@ public class DropshotCommand implements CommandExecutor {
         p.sendMessage("Creating new match! Invite a friend using /dropshot invite");
     }
 
-    private void Invite(Player p, String[] bits){
-        Player other = Bukkit.getPlayer(bits[1]);
-
+    public void Invite(Player p, String[] bits){
         if(bits.length < 2){
             p.sendMessage("You need to enter a player name to invite");
             return;
         }
+
+        Player other = Bukkit.getPlayer(bits[1]);
 
         if(other == null){
             p.sendMessage("Player " + bits[1] + " not found");
@@ -99,11 +99,16 @@ public class DropshotCommand implements CommandExecutor {
             return;
         }
 
+        if(!arena.IsWaiting()){
+            p.sendMessage("You can't invite someone right now");
+            return;
+        }
+
         ArenaManager.GetInstance().SendInvite(p, other, arena);
         p.sendMessage("Invite sent, it will time out in 30 seconds");
     }
 
-    private void Leave(Player p, String[] bits){
+    public void Leave(Player p, String[] bits){
         Arena arena = ArenaManager.GetInstance().GetPlayerArena(p);
 
         if(arena == null){
@@ -114,7 +119,7 @@ public class DropshotCommand implements CommandExecutor {
         arena.PlayerQuit(p);
     }
 
-    private void AcceptInvite(Player p, String[] bits){
+    public void AcceptInvite(Player p, String[] bits){
 
         if(bits.length < 2){
             p.sendMessage("You can't use this command manually");

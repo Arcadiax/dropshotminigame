@@ -1,6 +1,5 @@
 package net.mysteryspace.dropshotminigame.Util;
 
-import net.mysteryspace.dropshotminigame.Arena.Arena;
 import net.mysteryspace.dropshotminigame.Arena.ArenaManager;
 import net.mysteryspace.dropshotminigame.Main;
 import org.bukkit.Bukkit;
@@ -14,11 +13,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.util.BlockIterator;
-import org.bukkit.util.Vector;
 
 public class BaseGameSuppression implements Listener {
     private Main _plugin;

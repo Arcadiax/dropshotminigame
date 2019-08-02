@@ -1,17 +1,14 @@
 package net.mysteryspace.dropshotminigame.Arena;
 
-import net.minecraft.server.v1_13_R2.ChatMessageType;
-import net.minecraft.server.v1_13_R2.IChatBaseComponent;
-import net.minecraft.server.v1_13_R2.PacketPlayOutChat;
 import net.mysteryspace.dropshotminigame.Main;
 import net.mysteryspace.dropshotminigame.Util.Helpers;
 import net.mysteryspace.dropshotminigame.Util.Timer;
 import net.mysteryspace.dropshotminigame.Util.Timers;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +26,9 @@ public class Arena {
     private Timer _timer;
     private int _logicTaskId;
 
-    private int[] _playerScores;
+    private Scoreboard _scoreboard;
+    private Team[] _scoreboardTeams;
+    private Objective _scoreObjective;
 
     private Main _plugin;
 
@@ -46,7 +45,6 @@ public class Arena {
         _players = new ArrayList<>();
         _playerTempInventory = new HashMap<>();
         _playerTempLocations = new HashMap<>();
-        _playerScores = new int[2];
 
         _state = ArenaGameState.WAITING;
 
@@ -58,6 +56,8 @@ public class Arena {
                 GameLogic();
             }
         }, 0, 20);
+
+        SetupScoreboard();
     }
 
     public boolean IsEmpty(){
@@ -105,26 +105,20 @@ public class Arena {
     }
 
     private void SendCountdownMessage(){
-        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nGame Starting in §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
-        PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
-        ((CraftPlayer)_players.get(0)).getHandle().playerConnection.sendPacket(packet);
+        for(Player p : _players){
+            Helpers.SendGameInfoMessage(p, "{\"text\":\"§b§l§nGame Starting in §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
+        }
     }
 
     private void SendGameCounterMessage(){
-        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nTime Left: §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
-        PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
-
         for(Player p : _players){
-            ((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
+            Helpers.SendGameInfoMessage(p, "{\"text\":\"§b§l§nTime Left: §e§l§n" + Helpers.SecondsToString(_timer.GetTime()) + "\"}");
         }
     }
 
     private void SendKickoutCounterMessage(){
-        IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a("{\"text\":\"§b§l§nLeaving Game in: §e§l§n" + Helpers.SecondsToString(_timer.GetTime())+ "\"}");
-        PacketPlayOutChat packet = new PacketPlayOutChat(comp, ChatMessageType.GAME_INFO);
-
         for(Player p : _players){
-            ((CraftPlayer)p).getHandle().playerConnection.sendPacket(packet);
+            Helpers.SendGameInfoMessage(p, "{\"text\":\"§b§l§nLeaving Game in: §e§l§n" + Helpers.SecondsToString(_timer.GetTime())+ "\"}");
         }
 
     }
@@ -132,6 +126,11 @@ public class Arena {
     public void PlayerJoin(Player p){
         if(_players.size() == 2){
             p.sendMessage("Could not join game, it's full");
+            return;
+        }
+
+        if(_state != ArenaGameState.WAITING){
+            p.sendMessage("Game is already in progress");
             return;
         }
 
@@ -153,6 +152,12 @@ public class Arena {
     }
 
     public void PlayerQuit(Player p){
+        int index = _players.indexOf(p);
+        if(_scoreboardTeams[index].hasEntry(GetPlayerNiceId(p)))
+            _scoreboardTeams[index].removeEntry(GetPlayerNiceId(p));
+
+        p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+
         if(_playerTempLocations.containsKey(p)){
             p.teleport(_playerTempLocations.get(p));
             _playerTempLocations.remove(p);
@@ -160,7 +165,7 @@ public class Arena {
             p.teleport(ArenaManager.GetInstance().HubLocation());
 
         if(_playerTempInventory.containsKey(p)){
-            p.getInventory().setContents(_playerTempInventory.get(p));
+            p.getInventory().setContents(_playerTempInventory.get(p).clone());
             _playerTempInventory.remove(p);
         }
 
@@ -189,7 +194,6 @@ public class Arena {
 
         _state = ArenaGameState.WAITING;
         _players = new ArrayList<>();
-        _playerScores = new int[2];
         _playerTempLocations = new HashMap<>();
         _playerTempInventory = new HashMap<>();
     }
@@ -199,8 +203,6 @@ public class Arena {
         _players.get(1).teleport(_p2Spawn);
         _timer = Timers.GetInstance().NewTimer(ArenaManager.GetInstance().GetGameLength());
         PreparePlayerScoreboard();
-        _playerScores[0] = 0;
-        _playerScores[1] = 0;
         GivePlayersKit();
         _state = ArenaGameState.PLAYING;
     }
@@ -209,16 +211,21 @@ public class Arena {
         _players.get(0).teleport(_waitSpawn);
         _players.get(1).teleport(_waitSpawn);
 
+        int[] scores = {
+                _scoreObjective.getScore(GetPlayerNiceId(0)).getScore(),
+                _scoreObjective.getScore(GetPlayerNiceId(1)).getScore()
+        };
+
         _timer = Timers.GetInstance().NewTimer(ArenaManager.GetInstance().GetStartGameCountdownLength());
 
         int winnerId = 0;
         int secondId = 1;
-        if(_playerScores[1] > _playerScores[0]) {
+        if(scores[1] > scores[0]) {
             winnerId = 1;
             secondId = 0;
         }
-        BroadcastToPlayers("§a§l" + _players.get(winnerId).getDisplayName() + " Wins with " + _playerScores[winnerId] + " points!");
-        BroadcastToPlayers("§f§l" + _players.get(secondId).getDisplayName() + " got " + _playerScores[secondId] + " points");
+        BroadcastToPlayers("§a§l" + GetPlayerNiceId(winnerId) + " Wins with " + scores[winnerId] + " points!");
+        BroadcastToPlayers("§f§l" + GetPlayerNiceId(secondId) + " got " + scores[secondId] + " points");
 
         TakePlayerKits();
         _state = ArenaGameState.FINISHED;
@@ -247,20 +254,39 @@ public class Arena {
         if(points <= 0)
             return;
 
-        int ind = _players.indexOf(p);
-        _playerScores[ind] += points;
+        AddPlayerPoints(p, points);
+    }
 
+    private void AddPlayerPoints(Player p, int points){
         if(points == ArenaManager.GetInstance().GetMaxScore())
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 0);
         else
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 0);
 
-        //TODO: Remove when scoreboards implemented
-        BroadcastToPlayers("§c§l" + p.getDisplayName() + " Scored §e§l" + points + " points!");
+        Score score = _scoreObjective.getScore(GetPlayerNiceId(p));
+        int oldScore = score.getScore();
+        score.setScore(oldScore + points);
+    }
+
+    public void SetupScoreboard(){
+        ScoreboardManager manager = Bukkit.getScoreboardManager();
+        _scoreboard = manager.getNewScoreboard();
+        _scoreboardTeams = new Team[2];
+        _scoreboardTeams[0] = _scoreboard.registerNewTeam("0");
+        _scoreboardTeams[1] = _scoreboard.registerNewTeam("1");
+        _scoreObjective = _scoreboard.registerNewObjective("score", "dummy", "Points");
+        _scoreObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
     }
 
     private void PreparePlayerScoreboard(){
-        //TODO: Scoreboard and no chat messages for scores
+        _scoreboardTeams[0].addEntry(GetPlayerNiceId(0));
+        _scoreboardTeams[1].addEntry(GetPlayerNiceId(1));
+
+        for(Player p : _players) {
+            Score score = _scoreObjective.getScore(GetPlayerNiceId(p));
+            score.setScore(0);
+            p.setScoreboard(_scoreboard);
+        }
     }
 
     private void BroadcastToPlayers(String message){
@@ -288,11 +314,16 @@ public class Arena {
         }
     }
 
-    public boolean IsPlaying(){
-        return _state == ArenaGameState.PLAYING;
-    }
+    public boolean IsWaiting(){return _state == ArenaGameState.WAITING; }
 
     public double GetHoleExitHeight(){
         return _holeExitHeight;
+    }
+
+    private String GetPlayerNiceId(int index){
+        return _players.get(index).getDisplayName();
+    }
+    private String GetPlayerNiceId(Player p){
+        return p.getDisplayName();
     }
 }

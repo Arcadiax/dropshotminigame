@@ -6,14 +6,12 @@ import net.mysteryspace.dropshotminigame.Util.Timers;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
 
     private Settings _settings;
-
     public Settings GetSettings(){return _settings; }
 
     @Override
@@ -59,6 +57,7 @@ public class Main extends JavaPlugin {
                 featuresConfig.getBoolean("saveInventoryBetweenGames", false)
         );
 
+        //Scores
         ConfigurationSection scoreConfig = getConfig().getConfigurationSection("scoreValues");
         _settings.SetScoreValues(
                 scoreConfig.getInt("WHITE_WOOL", 1),

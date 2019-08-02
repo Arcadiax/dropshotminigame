@@ -5,6 +5,7 @@ features:
   suppressDamage: true
   integratedHub: true
   saveInventoryBetweenGames: true
+  suppressBlockDamage: true
 
 settings:
   startGameCountdown: 15
