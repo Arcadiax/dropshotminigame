@@ -153,6 +153,7 @@ public class Arena {
 
     public void PlayerQuit(Player p){
         int index = _players.indexOf(p);
+
         if(_scoreboardTeams[index].hasEntry(GetPlayerNiceId(p)))
             _scoreboardTeams[index].removeEntry(GetPlayerNiceId(p));
 
@@ -169,16 +170,16 @@ public class Arena {
             _playerTempInventory.remove(p);
         }
 
-        if(_players.size() == 1) {
-            ResetArena();
-        }
-
-        if(_players.size() == 2) {
-            if(_state == ArenaGameState.PLAYING) {
-                p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+        if(_state != ArenaGameState.FINISHED) {
+            if (_players.size() == 1) {
+                _players.remove(p);
+                ResetArena();
             }
-            _players.remove(p);
-            PartiallyResetArena();
+
+            if (_players.size() == 2) {
+                _players.remove(p);
+                PartiallyResetArena();
+            }
         }
     }
 
@@ -208,8 +209,9 @@ public class Arena {
     }
 
     private void EndGame(){
-        _players.get(0).teleport(_waitSpawn);
-        _players.get(1).teleport(_waitSpawn);
+        for(Player p : _players){
+            p.teleport(_waitSpawn);
+        }
 
         int[] scores = {
                 _scoreObjective.getScore(GetPlayerNiceId(0)).getScore(),
